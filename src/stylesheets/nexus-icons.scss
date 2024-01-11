@@ -1,0 +1,587 @@
+/**
+ * ICONS
+ */
+
+
+// ICON UTILS
+
+@mixin replace-icon($name, $size: 20px) {
+  fill: transparent;
+  background-color: currentColor;
+  -webkit-mask-image: url(assets/fonts/icons/#{$name}_24px.svg);
+  -webkit-mask-size: contain;
+  -webkit-mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  height: $size;
+  width: $size;
+
+  >use {
+    display: none; // turn off original icons!?
+  }
+}
+
+// replace global ones
+
+.icon {
+  &-about {
+    @include replace-icon("info_outline");
+  }
+
+  &-activate {
+    @include replace-icon("done");
+  }
+
+  &-add {
+    @include replace-icon("add_circle");
+  }
+
+  &-announcements {
+    @include replace-icon("announcement");
+  }
+
+  &-archive {
+    @include replace-icon("archive");
+  }
+
+  &-attention-required {
+    @include replace-icon("warning");
+  }
+
+  &-author {
+    @include replace-icon("person");
+  }
+
+  &-auto-update {
+    @include replace-icon("update");
+  }
+
+  &-autosort-disabled {
+    @include replace-icon("sync_disabled");
+  }
+
+  &-autosort-enabled {
+    @include replace-icon("sync");
+  }
+
+  &-bookmark {
+    @include replace-icon("bookmark");
+  }
+
+  &-browse {
+    @include replace-icon("folder_open");
+  }
+
+  &-bug {
+    @include replace-icon("bug_report");
+  }
+
+  &-categories {
+    @include replace-icon("category");
+  }
+
+  &-changelog {
+    @include replace-icon("description");
+  }
+
+  &-checkbox-checked {
+    @include replace-icon("check_box");
+  }
+
+  &-checkbox-unchecked {
+    @include replace-icon("check_box_outline_blank");
+  }
+
+  &-clipboard {
+    @include replace-icon("copy");
+  }
+
+  &-clipboard-copy {
+    @include replace-icon("copy");
+  }
+
+
+  &-close {
+    @include replace-icon("close");
+  }
+
+  &-close-slim {
+    @include replace-icon("close");
+  }
+
+  &-clone {
+    @include replace-icon("build");
+  }
+
+  &-collapse-all {
+    @include replace-icon("unfold_less");
+  }
+
+  &-collection {
+    @include replace-icon("collections");
+  }
+
+  &-comments {
+    @include replace-icon("comment");
+  }
+
+  &-completed {
+    @include replace-icon("done");
+  }
+
+  &-completed {
+    @include replace-icon("person");
+  }
+
+  &-conflict {
+    @include replace-icon("flash_on");
+  }
+
+  &-connection {
+    @include replace-icon("list_alt");
+  }
+
+  &-contributor {
+    @include replace-icon("person");
+  }
+
+
+  &-dashboard {
+    @include replace-icon("home");
+  }
+
+
+  &-delete {
+    @include replace-icon("delete_forever");
+  }
+
+  &-deploy {
+    @include replace-icon("publish");
+  }
+
+  &-deselect {
+    @include replace-icon("indeterminate_check_box");
+  }
+
+
+
+  &-details {
+    @include replace-icon("info");
+  }
+
+  &-dialog-error {
+    @include replace-icon("error");
+  }
+
+  &-dialog-info {
+    @include replace-icon("info");
+  }
+
+  &-disconnected {
+    @include replace-icon("wifi_off");
+  }
+
+  &-download {
+    @include replace-icon("download");
+  }
+
+  &-download-speed {
+    @include replace-icon("network_check");
+  }
+
+  &-drag-handle {
+    @include replace-icon("drag_indicator");
+  }
+
+  &-edit {
+    @include replace-icon("edit");
+  }
+
+  &-endorse-maybe {
+    @include replace-icon("thumb_up_off_alt");
+  }
+
+  &-endorse-no {
+    @include replace-icon("thumb_down_alt");
+  }
+
+  &-endorse-yes {
+    @include replace-icon("thumb_up_alt");
+  }
+
+  &-executable {
+    @include replace-icon("play_arrow");
+  }
+
+  &-expand-all {
+    @include replace-icon("unfold_more");
+  }
+
+  &-expand-overlay {
+    @include replace-icon("expand_more");
+  }
+
+
+  &-extensions {
+    @include replace-icon("extension");
+  }
+
+  &-extension-render-failed {
+    @include replace-icon("warning");
+  }
+
+  &-folder-add {
+    @include replace-icon("create_new_folder");
+  }
+
+  &-folder-download {
+    @include replace-icon("upload");
+  }
+
+
+  &-feedback {
+    @include replace-icon("send");
+  }
+
+  &-feedback-error {
+    @include replace-icon("warning");
+  }
+
+  &-feedback-info {
+    @include replace-icon("info");
+  }
+
+  &-feedback-success {
+    @include replace-icon("done");
+  }
+
+  &-feedback-warning {
+    @include replace-icon("warning");
+  }
+
+  &-filter {
+    @include replace-icon("filter_list");
+  }
+
+
+  &-game {
+    @include replace-icon("joystic-game-filled");
+  }
+
+  &-game-menu {
+    @include replace-icon("more_vert");
+  }
+
+  &-groups {
+    @include replace-icon("scatter_plot");
+  }
+
+  &-highlight {
+    @include replace-icon("visibility");
+  }
+
+  &-highlight-tool {
+    @include replace-icon("build");
+  }
+
+  &-health {
+    @include replace-icon("monitor_diagnosis");
+  }
+
+  &-hide {
+    @include replace-icon("visibility_off");
+  }
+
+  &-history {
+    @include replace-icon("history");
+  }
+
+  &-idea {
+    @include replace-icon("lightbulb_outline");
+  }
+
+  &-import {
+    @include replace-icon("import_export");
+  }
+
+  &-incompatible {
+    @include replace-icon("warning");
+  }
+
+  &-input-cancel {
+    @include replace-icon("close");
+  }
+
+  &-input-confirm {
+    @include replace-icon("done");
+  }
+
+  &-install {
+    @include replace-icon("add_box");
+  }
+
+  &-inspect {
+    @include replace-icon("visibility");
+  }
+
+  &-launch-application {
+    @include replace-icon("play_circle_outline");
+  }
+
+  &-launch-simple {
+    @include replace-icon("play_arrow");
+  }
+
+  &-layout-grid {
+    @include replace-icon("view_module");
+  }
+
+  &-layout-list {
+    @include replace-icon("view_list");
+  }
+
+  &-link {
+    @include replace-icon("link");
+  }
+
+  &-locked {
+    @include replace-icon("lock");
+  }
+
+  &-logout {
+    @include replace-icon("exit_to_app");
+  }
+
+  &-loot-sort {
+    @include replace-icon("sort");
+  }
+
+  &-menu {
+    @include replace-icon("more_vert");
+  }
+
+  &-merge {
+    @include replace-icon("merge_type");
+  }
+
+  &-mods {
+    @include replace-icon("mods");
+  }
+
+  &-nav-back {
+    @include replace-icon("arrow_back");
+  }
+
+  &-nav-forward {
+    @include replace-icon("arrow_forward");
+  }
+
+  &-notifications {
+    @include replace-icon("notifications");
+  }
+
+
+  &-onoff {
+    @include replace-icon("power_settings_new");
+  }
+
+  &-open-ext {
+    @include replace-icon("folder");
+  }
+
+  &-open-in-browser {
+    @include replace-icon("open_in_browser");
+  }
+
+  &-override {
+    @include replace-icon("priority_high");
+  }
+
+  &-official {
+    @include replace-icon("nexus_logo_white");
+  }
+
+
+  &-pane-left {
+    @include replace-icon("chevron_left");
+  }
+
+  &-pane-right {
+    @include replace-icon("chevron_right");
+  }
+
+  &-pause {
+    @include replace-icon("pause");
+  }
+
+  &-placeholder-image {
+    @include replace-icon("image_outline");
+  }
+
+  &-plugin-master {
+    @include replace-icon("star");
+  }
+
+  &-plugins {
+    @include replace-icon("add_circle");
+  }
+
+  &-profile {
+    @include replace-icon("dvr");
+  }
+
+  &-purge {
+    @include replace-icon("delete");
+  }
+
+
+  &-refresh {
+    @include replace-icon("refresh");
+  }
+
+  &-remove {
+    @include replace-icon("remove_circle");
+  }
+
+  &-report {
+    @include replace-icon("receipt");
+  }
+
+  &-resume {
+    @include replace-icon("play_arrow");
+  }
+
+
+  &-savegame {
+    @include replace-icon("save");
+  }
+
+  &-search {
+    @include replace-icon("search");
+  }
+
+  &-search-down {
+    @include replace-icon("arrow_drop_down");
+  }
+
+  &-search-up {
+    @include replace-icon("arrow_drop_up");
+  }
+
+
+
+
+  &-select-install {
+    @include replace-icon("add_box");
+  }
+
+  &-settings {
+    @include replace-icon("settings");
+  }
+
+  &-show {
+    @include replace-icon("visibility");
+  }
+
+
+
+
+
+  &-showhide-down {
+    @include replace-icon("expand_more");
+  }
+
+  &-showhide-left {
+    @include replace-icon("chevron_left");
+  }
+
+  &-showhide-right {
+    @include replace-icon("chevron_right");
+  }
+
+  &-showhide-up {
+    @include replace-icon("expand_less");
+  }
+
+
+  &-sort-down {
+    @include replace-icon("expand_more");
+  }
+
+  &-sort-none {
+    @include replace-icon("unfold_more");
+  }
+
+  &-sort-up {
+    @include replace-icon("expand_less");
+  }
+
+  &-spinner {
+    @include replace-icon("spinner");
+  }
+
+  &-spinner_new {
+    @include replace-icon("spinner");
+  }
+
+  &-start-install {
+    @include replace-icon("add_box");
+  }
+
+  &-stop {
+    @include replace-icon("stop");
+  }
+
+  /*
+    &-stroke {
+      @include replace-icon("thumb_up_alt");
+    }*/
+  &-swap {
+    @include replace-icon("swap_horiz");
+  }
+
+
+
+  &-toggle-disabled {
+    @include replace-icon("close");
+  }
+
+  &-toggle-enabled {
+    @include replace-icon("done");
+  }
+
+  &-toggle-uninstalled {
+    @include replace-icon("delete");
+  }
+
+  &-track {
+    @include replace-icon("tracking");
+  }
+
+  &-transfer {
+    @include replace-icon("repeat");
+  }
+
+  &-undo {
+    @include replace-icon("undo");
+  }
+
+  &-unlocked {
+    @include replace-icon("lock_open");
+  }
+
+  &-user {
+    @include replace-icon("account_circle");
+  }
+
+  &-video {
+    @include replace-icon("ondemand_video");
+  }
+
+  &-warning {
+    @include replace-icon("warning");
+  }
+
+
+}
+
+// replace specific ones?
