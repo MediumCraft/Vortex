@@ -164,7 +164,9 @@ jobs:
         with:
           files: |
             ./dist/vortex-setup-*.*.*.exe
-            ./dist/*.yml
+            ./dist/latest.yml
+            ./dist/alpha.yml
+            ./dist/beta.yml
           prerelease: true
           draft: true
           name: ${{ steps.setOutputs.outputs.rawVersion }}
