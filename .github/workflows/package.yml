@@ -163,8 +163,8 @@ jobs:
         if: ${{ inputs.release == true }}
         with:
           files: |
-            ./dist/vortex-setup-${{ steps.setOutputs.outputs.rawVersion }}.exe
-            ./dist/latest.yml
+            ./dist/vortex-setup-*.*.*.exe
+            ./dist/*.yml
           prerelease: true
           draft: true
           name: ${{ steps.setOutputs.outputs.rawVersion }}
