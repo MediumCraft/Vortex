@@ -9,7 +9,7 @@ import { truthy } from '../../util/util';
 import { NEXUS_BASE_URL } from '../nexus_integration/constants';
 
 import {app as appIn, dialog as dialogIn, ipcMain} from 'electron';
-import {autoUpdater as AUType, UpdateInfo} from 'electron-updater';
+import {autoUpdater as AUType, ProgressInfo, UpdateInfo} from 'electron-updater';
 import * as semver from 'semver';
 import uuidv5 from 'uuid/v5';
 import { RegGetValue } from 'winapi-bindings';
@@ -71,12 +71,38 @@ function setupAutoUpdate(api: IExtensionApi) {
   let notified: boolean = false;
   let channelOverride: UpdateChannel;
 
-  if (process.env.IS_PREVIEW_BUILD === 'true') {
-    log('info', 'forcing update channel for preview builds so that we don\'t automatically downgrade');
-    api.store.dispatch(setUpdateChannel('next'));
-  } else if (state().settings.update.channel === 'next') {
-    api.store.dispatch(setUpdateChannel('beta'));
-  }
+  const parsedVersion = semver.parse(app.getVersion());  
+  const lastUpdateChannel = state().settings.update.channel;
+  const newUpdateChannel = parsedVersion.prerelease[0] as UpdateChannel ?? undefined;
+
+  // check what version the app is being run, and set channel accordingly. In case they've installed a beta but wasn't before
+  log('info', 'version info', {
+    getVersion: app.getVersion(),
+    parsedVersion: parsedVersion,
+    isPackaged: app.isPackaged,
+    lastUpdateChannel, 
+    newUpdateChannel
+  });
+
+  // we are running a pre-release version, so lets check if we need to update the channel
+  if (parsedVersion.prerelease.length > 0) {
+
+    // if we were stable before, then we need to update the channel to what we have now.
+    // if we were pre-release before, we need to check what level
+
+    const lastUpdateChannel = state().settings.update.channel;
+    const newUpdateChannel = parsedVersion.prerelease[0] as UpdateChannel;
+
+    // on stable, none or next channel last time, so need to change channel regardless
+    if(lastUpdateChannel === 'stable' || lastUpdateChannel === 'none' || lastUpdateChannel === 'next' ) {
+      api.store.dispatch(setUpdateChannel(newUpdateChannel));
+      log('info', `Currently running a version of Vortex that is a pre-release (${newUpdateChannel}) and previously it was (${lastUpdateChannel}). Changing update channel to match`);
+    } else if (lastUpdateChannel === 'beta' && newUpdateChannel === 'alpha') {
+      //  we only want to update if it's now alpha, if it's the other way round, we don't care
+      api.store.dispatch(setUpdateChannel(newUpdateChannel));
+      log('info', `Currently running a version of Vortex that is more of a pre-release (${newUpdateChannel}) than previously (${lastUpdateChannel}). Changing update channel to match`);
+    }
+  }  
 
   log('info', 'setupAutoUpdate complete');
 
@@ -116,7 +142,7 @@ function setupAutoUpdate(api: IExtensionApi) {
   };
 
   autoUpdater.on('error', (err) => {
-    if ((err.cmd !== undefined) && err.cmd.startsWith('powershell.exe')) {
+    if ((err.message !== undefined) && err.message.startsWith('powershell.exe')) {
       api.showErrorNotification(
         'Checking for update failed',
         'Failed to verify the signature of the update file. This is probably caused '
@@ -221,13 +247,13 @@ function setupAutoUpdate(api: IExtensionApi) {
     log('info', 'no update available');
   });
 
-  autoUpdater.on('download-progress', (progress: IProgressInfo) => {
+  autoUpdater.on('download-progress', (info: ProgressInfo) => {
     if (notified) {
       api.sendNotification({
         id: 'vortex-update-notification',
         type: 'activity',
         message: 'Downloading update',
-        progress: progress.percent,
+        progress: info.percent,
       });
     }
   });
@@ -271,26 +297,36 @@ function setupAutoUpdate(api: IExtensionApi) {
 
     log('info', 'checking for vortex update:', channel);
     const didOverride = channelOverride !== undefined;
-    autoUpdater.allowPrerelease = channel !== 'stable';    
+    //autoUpdater.allowPrerelease = channel !== 'stable';
 
+    // env USE_VORTEX_STAGING is basically used to determine if we are using our 'Staging' github repo, Vortex-Staging
+
+    const useVortexStaging = process.env.USE_VORTEX_STAGING === 'true';
+    
     autoUpdater.setFeedURL({
       provider: 'github',
       owner: 'Nexus-Mods',
-      repo: channel === 'next' ? 'Vortex-Next' : 'Vortex',
+      repo: useVortexStaging ? 'Vortex-Staging' : 'Vortex',
       private: false,
       publisherName: [
         'Black Tree Gaming Limited',
         'Black Tree Gaming Ltd'
-      ],
+      ]
     });
+
+    //autoUpdater.channel = '';
     autoUpdater.allowDowngrade = true;
-    autoUpdater.autoDownload = false;
+    autoUpdater.autoDownload = false;  
+    autoUpdater.allowPrerelease = true; 
+    autoUpdater.forceDevUpdateConfig = true; 
 
     log('info', 'update config is ', {
-      provider: 'github',
-      owner: 'Nexus-Mods',
-      repo: channel === 'next' ? 'Vortex-Next' : 'Vortex',
-      allowPrerelease: channel !== 'stable'
+      feed: autoUpdater.updateConfigPath,
+      version: autoUpdater.currentVersion.version,
+      channel: autoUpdater.channel,
+      allowPrerelease: autoUpdater.allowPrerelease,
+      allowDowngrade: autoUpdater.allowDowngrade,
+      autoDownload: autoUpdater.autoDownload,
     });
     
     autoUpdater.checkForUpdates()

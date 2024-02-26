@@ -168,7 +168,7 @@
         "FORCE_ALLOW_ELEVATED_SYMLINKING": "true",
         "DEBUG_REACT_RENDERS": "false",
         "START_DEVTOOLS": "true",
-        "IS_PREVIEW_BUILD": "true"
+        "USE_VORTEX_STAGING": "true"
       },
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",

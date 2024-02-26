@@ -37,7 +37,9 @@
     "publisherName": [
       "Black Tree Gaming Limited",
       "Black Tree Gaming Ltd"
-    ]
+    ],
+    "generateUpdatesFilesForAllChannels": true,
+    "detectUpdateChannel": true
   },
   "nsis": {
     "perMachine": true,

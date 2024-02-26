@@ -24,7 +24,7 @@ function init(context: IExtensionContext): boolean {
     }
 
     log('info', 'updater config', {
-      isPreviewBuild: process.env.IS_PREVIEW_BUILD,
+      USE_VORTEX_STAGING: process.env.USE_VORTEX_STAGING,
       installType: context.api.getState().app.installType,
       updateChannel: context.api.getState().settings.update.channel
     });
