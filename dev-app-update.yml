@@ -1,8 +1,3 @@
 owner: Nexus-Mods
 repo: Vortex-Staging
 provider: github
-private: false
-publisherName:
-  - Black Tree Gaming Limited
-  - Black Tree Gaming Ltd
-channel: beta
