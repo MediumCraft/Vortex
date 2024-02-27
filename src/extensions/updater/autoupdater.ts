@@ -73,15 +73,14 @@ function setupAutoUpdate(api: IExtensionApi) {
 
   const parsedVersion = semver.parse(app.getVersion());  
   const lastUpdateChannel = state().settings.update.channel;
-  const newUpdateChannel = parsedVersion.prerelease[0] as UpdateChannel ?? undefined;
+  //const newUpdateChannel = parsedVersion.prerelease[0] as UpdateChannel ?? undefined;
 
   // check what version the app is being run, and set channel accordingly. In case they've installed a beta but wasn't before
   log('info', 'version info', {
     getVersion: app.getVersion(),
     parsedVersion: parsedVersion,
     isPackaged: app.isPackaged,
-    lastUpdateChannel, 
-    newUpdateChannel
+    lastUpdateChannel
   });
 
   // we are running a pre-release version, so lets check if we need to update the channel
@@ -94,7 +93,7 @@ function setupAutoUpdate(api: IExtensionApi) {
     const newUpdateChannel = parsedVersion.prerelease[0] as UpdateChannel;
 
     // on stable, none or next channel last time, so need to change channel regardless
-    if(lastUpdateChannel === 'stable' || lastUpdateChannel === 'none' || lastUpdateChannel === 'next' ) {
+    if(lastUpdateChannel === 'stable' || lastUpdateChannel === 'latest' || lastUpdateChannel === 'none' || lastUpdateChannel === 'next' ) {
       api.store.dispatch(setUpdateChannel(newUpdateChannel));
       log('info', `Currently running a version of Vortex that is a pre-release (${newUpdateChannel}) and previously it was (${lastUpdateChannel}). Changing update channel to match`);
     } else if (lastUpdateChannel === 'beta' && newUpdateChannel === 'alpha') {
@@ -106,31 +105,62 @@ function setupAutoUpdate(api: IExtensionApi) {
 
   log('info', 'setupAutoUpdate complete');
 
-  const queryUpdate = (version: string): Promise<void> => {
+  const queryUpdate = (updateInfo: UpdateInfo): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
 
+      /*
       if (semver.satisfies(version, '^' + autoUpdater.currentVersion.version)) {
         // don't warn on a "compatible" update
         return resolve();
-      }
+      }*/
+
+      let filteredReleases = updateInfo.releaseNotes;
+      
+      if(typeof filteredReleases === 'string') {
+        log('info', 'release notes are a string', filteredReleases);
+      } else {
+        log('info', 'release notes are an array'); 
+
+        filteredReleases = filteredReleases.filter(release => {
+          {
+            const comparisonResult = semver.compare(release.version, updateInfo.version);
+            return comparisonResult === 0 || comparisonResult === -1;
+          }
+        });
+
+        log('info', 'filtered releases');     
+        filteredReleases.forEach(release => {
+          log('info', release.version);          
+        });
+      }      
 
       notified = true;
 
+      
       api.sendNotification({
         id: 'vortex-update-notification',
         type: 'info',
-        title: 'Major update available',
-        message: `(${version}) After installing this update you shouldn't go back to an older version.`,
+        title: 'Update available',
+        message: `${updateInfo.version} is available.`,
         noDismiss: true,
-        actions: [
+        actions: [          
+          { title: 'What\'s New', action: () => {
+            api.showDialog('info', `What\'s New in ${updateInfo.version}`, {
+              htmlText: typeof filteredReleases === 'string' ? filteredReleases : filteredReleases.map(release =>                
+                `<div class="changelog-dialog-release">
+                  <h2>${release.version}</h2>
+                  ${release.note}
+                </div>`
+                ).join(''),
+            }, [
+              { label: 'Close' },
+              { label: 'Ignore', action: () => reject(new UserCanceled()) },
+              { label: 'Download', action: () => resolve() }
+            ],
+            'new-update-changelog-dialog');
+          } },
           {
-            title: 'Download', action: dismiss => {
-              dismiss();
-              resolve();
-            },
-          },
-          {
-            title: 'Remind me later',
+            title: 'Ignore',
             action: dismiss => {
               dismiss();
               reject(new UserCanceled());
@@ -197,6 +227,7 @@ function setupAutoUpdate(api: IExtensionApi) {
       return;
     }
 
+
     let instPath: string;
     if (process.platform === 'win32') {
       try {
@@ -229,13 +260,14 @@ function setupAutoUpdate(api: IExtensionApi) {
         return;
       }
     }
+
     log('info', 'update available', {
       current: getApplication().version,
       update: info.version,
       instPath,
     });
 
-    queryUpdate(info.version)
+    queryUpdate(info)
       .then(() => autoUpdater.downloadUpdate()
         .catch(err => {
           log('warn', 'Downloading update failed', err);
@@ -259,24 +291,54 @@ function setupAutoUpdate(api: IExtensionApi) {
   });
 
   autoUpdater.on('update-downloaded',
-    (info: UpdateInfo) => {
-      log('info', 'update installed');
+    (updateInfo: UpdateInfo) => {
+      log('info', 'update downloaded');
 
       app.on('before-quit', updateWarning);
+
+
+      let filteredReleases = updateInfo.releaseNotes;
+      
+      if(typeof filteredReleases === 'string') {
+        log('info', 'release notes are a string', filteredReleases);
+      } else {
+        log('info', 'release notes are an array'); 
+
+        filteredReleases = filteredReleases.filter(release => {
+          {
+            const comparisonResult = semver.compare(release.version, updateInfo.version);
+            return comparisonResult === 0 || comparisonResult === -1;
+          }
+        });
+
+        log('info', 'filtered releases');     
+        filteredReleases.forEach(release => {
+          log('info', release.version);          
+        });
+      }
+
+
 
       api.sendNotification({
         id: 'vortex-update-notification',
         type: 'success',
-        message: 'Update available',
+        message: 'Update downloaded',
         actions: [
           {
-            title: 'Changelog',
+            title: 'What\'s New',
             action: () => {
-              api.store.dispatch(showDialog('info', `Changelog ${info.version}`, {
-                htmlText: info.releaseNotes as string,
+              api.store.dispatch(showDialog('info', `What's New in ${updateInfo.version}`, {
+                htmlText: typeof filteredReleases === 'string' ? filteredReleases : filteredReleases.map(release =>                
+                  `<div class="changelog-dialog-release">
+                    <h2>${release.version}</h2>
+                    ${release.note}
+                  </div>`
+                  ).join(''),
               }, [
                   { label: 'Close' },
-                ]));
+                ],
+                'new-update-changelog-dialog'),
+                );
             },
           },
           {
@@ -290,39 +352,88 @@ function setupAutoUpdate(api: IExtensionApi) {
       });
     });
 
-  const checkNow = (channel: string) => {
+  const checkNow = (channel: UpdateChannel) => {
     if (!state().session.base.networkConnected) {
       log('info', 'Not checking for updates because network is offline');
     }
 
     log('info', 'checking for vortex update:', channel);
     const didOverride = channelOverride !== undefined;
+
+
+    /**
+     * CONDITIONS FOR DEV ENV/TESTING/STAGING
+     * If running in dev mode, then we aren't packed, and for updating to be tested we need to set the following:
+     * 'autoUpdater.forceDevUpdateConfig = true;' and this will cause the autoUpdater to look for dev-app-update.yml
+     *  dev-app-update.yml is a file that is created in the root of the project, and it contains the following:
+     *  owner: Nexus-Mods
+     *  repo: Vortex-Staging
+     *  provider: github
+     * 
+     *  These settings are then the default that are used by autoUpdater
+     * 
+     *  if 'stable' is selected then we have to have the following for the releases to correctly match:
+     *  autoUpdater.allowPrerelease = false; 
+     *  GitHub 'Set as the latest release' on it's release and contain a latest.yml
+     *  other versions are not considered if 'set as latest release' isn't used
+     * 
+     * if a prerelease channel is selected, like 'alpha' or 'beta' then we have to have the following for the releases to correctly match:
+     *  autoUpdater.allowPrerelease = true;
+     */
+
+    // if we are running in dev mode, force the dev update config otherwise it won't run. new defaults are
+    // set in the dev-app-update.yml file and this file must exist in the root of the project
+    if(process.env.NODE_ENV === 'development') {
+      autoUpdater.forceDevUpdateConfig = true;       
+    }
+
+
     //autoUpdater.allowPrerelease = channel !== 'stable';
 
     // env USE_VORTEX_STAGING is basically used to determine if we are using our 'Staging' github repo, Vortex-Staging
-
-    const useVortexStaging = process.env.USE_VORTEX_STAGING === 'true';
+    
+    const useVortexStaging = process.env.USE_VORTEX_STAGING ?? 'false';    
+    
+    // official docs stay not to use this but I think that is for general use.
+    // we do want to be able to set the repo based on the USE_VORTEX_STAGING env variable
+    // in an installed, production setting    
     
     autoUpdater.setFeedURL({
       provider: 'github',
       owner: 'Nexus-Mods',
       repo: useVortexStaging ? 'Vortex-Staging' : 'Vortex',
+      updaterCacheDirName: 'vortex-updater', // matches the app-update.yml that is generated but not used because of this function
       private: false,
       publisherName: [
         'Black Tree Gaming Limited',
         'Black Tree Gaming Ltd'
       ]
-    });
+    });    
 
-    //autoUpdater.channel = '';
-    autoUpdater.allowDowngrade = true;
+    //autoUpdater.allowDowngrade = true;
     autoUpdater.autoDownload = false;  
-    autoUpdater.allowPrerelease = true; 
-    autoUpdater.forceDevUpdateConfig = true; 
+    autoUpdater.fullChangelog = true; // not atm, but could be useful for the future
 
-    log('info', 'update config is ', {
-      feed: autoUpdater.updateConfigPath,
-      version: autoUpdater.currentVersion.version,
+    switch (channel) {
+      case 'stable':
+      case 'latest':
+        autoUpdater.allowPrerelease = false;
+        autoUpdater.channel = 'latest';
+        break;
+      case 'alpha':
+      case 'beta':
+        autoUpdater.allowPrerelease = true;
+        autoUpdater.channel = channel;
+        break;
+      default:
+        autoUpdater.allowPrerelease = false;
+        autoUpdater.channel = 'latest';
+        break;
+    }
+
+    log('info', 'autoUpdater config is ', {
+      //feed: autoUpdater.updateConfigPath,
+      currentVersion: autoUpdater.currentVersion.version,
       channel: autoUpdater.channel,
       allowPrerelease: autoUpdater.allowPrerelease,
       allowDowngrade: autoUpdater.allowDowngrade,
@@ -331,7 +442,7 @@ function setupAutoUpdate(api: IExtensionApi) {
     
     autoUpdater.checkForUpdates()
       .then(check => {
-        log('info', 'completed update check');
+        log('info', 'completed update check', check.updateInfo);
 
         // do a check here for if a regular type (properly installed, not dev or epic or whatever)
         // then that's the only time that we want to do the auto download
@@ -353,7 +464,7 @@ function setupAutoUpdate(api: IExtensionApi) {
   };
 
   ipcMain.on('check-for-updates', (event, channel: string) => {
-    checkNow(channel);
+    checkNow(channel as UpdateChannel);
   });
 
   ipcMain.on('set-update-channel', (event, channel: any, manual: boolean) => {
