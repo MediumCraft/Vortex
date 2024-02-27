@@ -57,9 +57,9 @@ jobs:
           InputVersion: ${{ inputs.version }}
           GITHUB_RUN_NUMBER: ${{ github.run_number }} 
         run: |
-          $tagVersion = $env:InputVersion.StartsWith('v') ? $env:InputVersion : "v" + $env:InputVersion
-          $rawVersion = $env:InputVersion.StartsWith('v') ? $env:InputVersion.Substring(1) : $env:InputVersion
-          $validation = [System.Version]::Parse($rawVersion)
+          $tagVersion = If ($env:InputVersion.StartsWith('v')) {$env:InputVersion} Else {"v" + $env:InputVersion}
+          $rawVersion = If ($env:InputVersion.StartsWith('v')) {$env:InputVersion.Substring(1)} Else {$env:InputVersion}
+          # $validation = [System.Version]::Parse($rawVersion)
           echo "tagVersion=$tagVersion" >> $env:GITHUB_OUTPUT
           echo "rawVersion=$rawVersion" >> $env:GITHUB_OUTPUT
           echo "artifactNameUnpacked=vortex-setup-$rawVersion-unpacked" >> $env:GITHUB_OUTPUT
@@ -163,8 +163,10 @@ jobs:
         if: ${{ inputs.release == true }}
         with:
           files: |
-            ./dist/vortex-setup-${{ steps.setOutputs.outputs.rawVersion }}.exe
+            ./dist/vortex-setup-*.*.*.exe
             ./dist/latest.yml
+            ./dist/alpha.yml
+            ./dist/beta.yml
           prerelease: true
           draft: true
           name: ${{ steps.setOutputs.outputs.rawVersion }}
