@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 
 import { IExtensionContext } from '../../types/IExtensionContext';
 import { ILoadOrderGameInfo, ILoadOrderGameInfoExt, IValidationResult, LoadOrder,
-  LoadOrderSerializationError, LoadOrderValidationError } from './types/types';
+  LoadOrderValidationError } from './types/types';
 
 import { ICollection } from './types/collections';
 
@@ -22,10 +22,10 @@ import * as selectors from '../../util/selectors';
 import { log } from '../../util/log';
 import { setFBLoadOrder } from './actions/loadOrder';
 
-import { setFBLoadOrderRedundancy } from './actions/session';
+import { setFBLoadOrderRedundancy, setFBForceUpdate } from './actions/session';
 
 import { addGameEntry, findGameEntry } from './gameSupport';
-import { assertValidationResult, errorHandler } from './util';
+import { assertValidationResult, errorHandler, handleLoadOrderValidationError } from './util';
 
 interface IDeployment {
   [modType: string]: types.IDeployedFile[];
@@ -197,9 +197,7 @@ async function applyNewLoadOrder(api: types.IExtensionApi,
   try {
     const validRes: IValidationResult = await gameEntry.validate(prev, newLO);
     assertValidationResult(validRes);
-    if (validRes !== undefined) {
-      throw new LoadOrderValidationError(validRes, newLO);
-    }
+    handleLoadOrderValidationError(api, profile.id, newLO, validRes);
     await gameEntry.serializeLoadOrder(newLO, prev);
   } catch (err) {
     return errorHandler(api, gameEntry.gameId, err);
@@ -260,8 +258,6 @@ export default function init(context: IExtensionContext) {
     props: () => {
       return {
         getGameEntry: findGameEntry,
-        validateLoadOrder: (profile: types.IProfile, loadOrder: LoadOrder) =>
-          validateLoadOrder(context.api, profile, loadOrder),
         onStartUp: (gameId: string) => onStartUp(context.api, gameId),
         onShowError: (gameId: string, error: Error) => errorHandler(context.api, gameId, error),
       };
@@ -330,15 +326,15 @@ async function validateLoadOrder(api: types.IExtensionApi,
       log('error', 'invalid game entry', details);
       throw new util.DataInvalid('invalid game entry');
     }
-    const validRes: IValidationResult = await gameEntry.validate(prevLO, loadOrder);
+    const validRes: IValidationResult = await gameEntry.validate(prevLO, loadOrder ?? []);
     assertValidationResult(validRes);
-    if (validRes !== undefined) {
-      throw new LoadOrderValidationError(validRes, loadOrder);
-    }
+    handleLoadOrderValidationError(api, profile.id, loadOrder, validRes);
 
     return Promise.resolve(undefined);
   } catch (err) {
     return Promise.reject(err);
+  } finally {
+    api.store.dispatch(setFBForceUpdate(profile.id));
   }
 }
 
@@ -357,9 +353,7 @@ async function onStartUp(api: types.IExtensionApi, gameId: string): Promise<Load
     const loadOrder = await gameEntry.deserializeLoadOrder();
     const validRes: IValidationResult = await gameEntry.validate(prev, loadOrder);
     assertValidationResult(validRes);
-    if (validRes !== undefined) {
-      throw new LoadOrderValidationError(validRes, loadOrder);
-    }
+    handleLoadOrderValidationError(api, profileId, loadOrder, validRes);
 
     return Promise.resolve(loadOrder);
   } catch (err) {

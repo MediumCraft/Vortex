@@ -32,7 +32,6 @@ export interface IBaseProps {
   getGameEntry: (gameId: string) => ILoadOrderGameInfo;
   onStartUp: (gameMode: string) => Promise<LoadOrder>;
   onShowError: (gameId: string, error: Error) => void;
-  validateLoadOrder: (profile: types.IProfile, newLO: LoadOrder) => Promise<void>;
 }
 
 interface IConnectedProps {
@@ -48,6 +47,8 @@ interface IConnectedProps {
   // The refresh id for the current profile
   //  (used to force a refresh of the list)
   refreshId: string;
+
+  validationError: LoadOrderValidationError;
 }
 
 interface IActionProps {
@@ -113,9 +114,11 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
 
   public UNSAFE_componentWillReceiveProps(newProps: IProps) {
     // Zuckerberg isn't going to like this...
-    if (this.state.currentRefreshId !== newProps.refreshId) {
+    if (this.state.currentRefreshId !== newProps.refreshId
+     || this.state.validationError !== newProps.validationError) {
       this.onRefreshList();
       this.nextState.currentRefreshId = newProps.refreshId;
+      this.nextState.validationError = newProps.validationError;
     }
   }
 
@@ -161,12 +164,6 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
         }, [])
       : [];
 
-    const infoPanel = () =>
-      <InfoPanel
-        validationError={validationError}
-        info={gameEntry?.usageInstructions}
-      />;
-
     const draggableList = () => (this.nextState.loading || this.nextState.updating)
       ? this.renderWait()
       : (enabled.length > 0)
@@ -205,7 +202,7 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
                     {draggableList()}
                   </FlexLayout.Flex>
                   <FlexLayout.Flex>
-                    {infoPanel()}
+                    <InfoPanel info={gameEntry?.usageInstructions} />;
                   </FlexLayout.Flex>
                 </FlexLayout>
               </DNDContainer>
@@ -236,37 +233,18 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
   }
 
   private onApply = (ordered: IItemRendererProps[]) => {
-    const { onSetOrder, onShowError, loadOrder, profile, validateLoadOrder } = this.props;
+    const { onSetOrder, profile } = this.props;
     const newLO = ordered.map(item => item.loEntry);
-    validateLoadOrder(profile, newLO)
-      .then(() => this.nextState.validationError = undefined)
-      .catch(err => {
-        if (err instanceof LoadOrderValidationError) {
-          this.nextState.validationError = err;
-        } else {
-          onShowError(profile.gameId, err);
-        }
-      })
-      // Regardless of whether the lo is valid or not, we still want it
-      //  displayed to the user to give them a chance to fix it from inside
-      //  Vortex (if possible)
-      .finally(() => onSetOrder(profile.id, newLO));
+    onSetOrder(profile.id, newLO);
   }
 
   private onRefreshList = () => {
     const { onStartUp, onSetOrder, profile } = this.props;
     this.nextState.updating = true;
+    this.nextState.validationError = undefined;
     onStartUp(profile?.gameId)
-      .then(lo => {
-        this.nextState.validationError = undefined;
-        onSetOrder(profile.id, lo);
-      })
-      .catch(err => {
-        if (err instanceof LoadOrderValidationError) {
-          this.nextState.validationError = err as LoadOrderValidationError;
-          onSetOrder(profile.id, err.loadOrder);
-        }
-      })
+      .then(lo => onSetOrder(profile.id, lo))
+      .catch(err => err instanceof LoadOrderValidationError ? onSetOrder(profile.id, err.loadOrder) : null)
       .finally(() => this.nextState.updating = false);
   }
 }
@@ -282,6 +260,7 @@ function mapStateToProps(state: types.IState, ownProps: IProps): IConnectedProps
     profile,
     needToDeploy: selectors.needToDeploy(state),
     refreshId: util.getSafe(state, ['session', 'fblo', 'refresh', profile?.id], ''),
+    validationError: util.getSafe(state, ['session', 'fblo', 'validationError', profile?.id], undefined),
   };
 }
 

@@ -1,3 +1,4 @@
+import { setFBValidationError } from './actions/session';
 import * as types from '../../types/api';
 import * as util from '../../util/api';
 import { findGameEntry } from './gameSupport';
@@ -88,5 +89,18 @@ export function assertValidationResult(validRes: any) {
   if ((Array.isArray(validRes)) || (validRes as IValidationResult)?.invalid === undefined) {
     throw new TypeError('Received incorrect/invalid return type from validation function; '
       + 'expected object of type IValidationResult');
+  }
+}
+
+export function handleLoadOrderValidationError(api: types.IExtensionApi,
+                                               profileId: string,
+                                               loadOrder: LoadOrder,
+                                               validRes: IValidationResult): void {
+  if (validRes !== undefined) {
+    const error = new LoadOrderValidationError(validRes, loadOrder);
+    api.store.dispatch(setFBValidationError(profileId, error));
+    throw error;
+  } else {
+    api.store.dispatch(setFBValidationError(profileId, undefined));
   }
 }

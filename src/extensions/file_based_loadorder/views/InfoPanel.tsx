@@ -4,11 +4,19 @@ import FlexLayout from '../../../controls/FlexLayout';
 import bbcode from '../../../util/bbcode';
 import { ComponentEx } from '../../../util/ComponentEx';
 import { LoadOrderValidationError } from '../types/types';
+import { connect } from 'react-redux';
 
-interface IProps {
+import { selectors, types, util } from 'vortex-api';
+
+interface IBaseProps {
   info: string | React.ComponentType<{}>;
+}
+
+interface IConnectedProps {
   validationError: LoadOrderValidationError;
 }
+
+type IProps = IBaseProps & IConnectedProps;
 
 class InfoPanel extends ComponentEx<IProps, {}> {
   private mDefaultInfo: string;
@@ -67,7 +75,13 @@ class InfoPanel extends ComponentEx<IProps, {}> {
   }
 }
 
-export default withTranslation(['common'])
-  ((InfoPanel) as any) as React.ComponentClass<{
-    validationError: LoadOrderValidationError,
-    info: string | React.ComponentType<{}>}>;
+function mapStateToProps(state: types.IState, ownProps: IProps): IConnectedProps {
+  const profile = selectors.activeProfile(state) || undefined;
+  return {
+    validationError: util.getSafe(state, ['session', 'fblo', 'validationError', profile?.id], undefined),
+  };
+}
+
+export default withTranslation(['common'])(
+  connect(mapStateToProps)(
+    InfoPanel) as any) as React.ComponentType<IBaseProps>;
