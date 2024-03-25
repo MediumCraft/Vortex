@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.9] - 2024-03-25
+
+- Fixed file overrides being cleared when switching to an empty profile
+- Fixed rare issue where it was possible for mods to fail deploying certain types
+
 ## [1.10.8] - 2024-03-13
 
 - Fixed error when accessing conflicts before conflict calculation completed
