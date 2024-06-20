@@ -42,7 +42,7 @@ class PageButton extends React.Component<IPageButtonProps, {}> {
           {t(page.title, { ns: namespace })}
         </span>
         {this.renderBadge()}
-        {this.renderActivity()}
+        {page.badge === undefined && this.renderActivity()}
       </div>
     );
   }
