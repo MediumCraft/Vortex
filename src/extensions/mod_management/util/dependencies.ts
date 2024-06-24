@@ -3,6 +3,8 @@ import { IExtensionApi } from '../../../types/IExtensionContext';
 import { IDownload } from '../../../types/IState';
 import { NotFound, ProcessCanceled, UserCanceled } from '../../../util/CustomErrors';
 
+import tryGlobMatch from './tryGlobMatch';
+
 import { IDependency, ILookupResultEx } from '../types/IDependency';
 import { IDownloadHint, IFileListItem, IMod, IModReference, IModRule } from '../types/IMod';
 
@@ -177,7 +179,7 @@ function lookupFulfills(lookup: ILookupResult, reference: IReference) {
     && ((fileSize === undefined) || (fileSize === value.fileSizeBytes))
     && ((logicalFileName === undefined) || (logicalFileName === value.logicalFileName))
     && ((fileExpression === undefined)
-      || ((value.fileName !== undefined) && minimatch(value.fileName, fileExpression)))
+      || ((value.fileName !== undefined) && tryGlobMatch({ pattern: value.fileName, expression: fileExpression })))
     && ((versionMatch === undefined)
       || semver.satisfies(semver.coerce(value.fileVersion), versionMatch));
 }

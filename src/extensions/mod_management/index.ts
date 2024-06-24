@@ -87,7 +87,7 @@ import {} from './views/Settings';
 import URLInput from './views/URLInput';
 import Workarounds from './views/Workarounds';
 
-import { opn } from '../../util/api';
+import { opn, tryGlobMatch } from '../../util/api';
 
 import { DEPLOY_BLACKLIST } from './constants';
 import { onAddMod, onGameModeActivated, onModsChanged, onPathsChanged,
@@ -101,7 +101,6 @@ import { findModByRef } from './util/dependencies';
 
 import Promise from 'bluebird';
 import * as _ from 'lodash';
-import minimatch from 'minimatch';
 import * as path from 'path';
 import React from 'react';
 import * as Redux from 'redux';
@@ -129,7 +128,7 @@ class BlacklistSet extends Set<string> {
 
   public has(value: string): boolean {
     return super.has(value)
-      || (this.mPatterns.find(pat => minimatch(value, pat, { nocase: true })) !== undefined);
+      || (this.mPatterns.find(pat => tryGlobMatch({ pattern: pat, expression: value })) !== undefined);
   }
 }
 

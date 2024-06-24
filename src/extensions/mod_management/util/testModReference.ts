@@ -1,14 +1,12 @@
 /* eslint-disable */
 import { truthy } from '../../../util/util';
-
-import { log } from '../../../util/log';
-
 import { IMod, IModReference, IFileListItem } from '../types/IMod';
 
 import * as _ from 'lodash';
-import minimatch from 'minimatch';
 import * as path from 'path';
 import * as semver from 'semver';
+
+import tryGlobMatch from './tryGlobMatch';
 
 export interface IModLookupInfo {
   id?: string;
@@ -105,7 +103,7 @@ function hasIdentifyingMarker(mod: IModLookupInfo,
 
 let onRefResolved: (gameId: string, modId: string,
                     reference: IModReference, refModId: string) => void;
-
+                    
 function testRef(mod: IModLookupInfo, modId: string, ref: IModReference,
                  source?: { gameId: string, modId: string },
                  fuzzyVersion?: boolean): boolean {
@@ -199,7 +197,7 @@ function testRef(mod: IModLookupInfo, modId: string, ref: IModReference,
     } else {
       const baseName = sanitizeExpression(mod.fileName);
       if ((baseName !== ref.fileExpression) &&
-          !minimatch(baseName, ref.fileExpression)) {
+          !tryGlobMatch({ pattern: baseName, expression: ref.fileExpression })) {
         return false;
       }
     }
@@ -255,11 +253,6 @@ export function testModReference(mod: IMod | IModLookupInfo, reference: IModRefe
     return false;
   }
 
-  if (!!mod['patches']) {
-    // This function will get called A LOT - logging anything here can slow down
-    //  the application massively - especially when downloading/installing collections!
-    log('info', 'mod has patches', { modId: mod?.id });
-  }
   if ((mod as any).attributes) {
     return testRef((mod as IMod).attributes as IModLookupInfo, mod.id,
                    reference, source, fuzzyVersion);

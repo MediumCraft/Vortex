@@ -1,6 +1,6 @@
-import minimatch from 'minimatch';
 import * as semver from 'semver';
 import { getSafe } from '../../util/storeHelper';
+import tryGlobMatch from '../mod_management/util/tryGlobMatch';
 
 export function matchesGameMode<T>(entry: T,
                                    gameMode: string,
@@ -17,7 +17,7 @@ export function matchesGameMode<T>(entry: T,
   //  we don't want to display announcements if the predicate fails, but
   //  we _do_ want to display surveys, so this allows us to keep the same
   //  predicate for both use cases. (bit hacky I admit..)
-    ? minimatch(gameMode, entryGameMode)
+    ? tryGlobMatch({ pattern: entryGameMode, expression: gameMode })
     : forceMatch;
 }
 

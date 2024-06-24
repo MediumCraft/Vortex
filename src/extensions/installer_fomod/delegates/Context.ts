@@ -13,10 +13,11 @@ import {getGame} from '../../gamemode_management/util/getGame';
 import DelegateBase from './DelegateBase';
 
 import Promise from 'bluebird';
-import minimatch from 'minimatch';
+
 import * as path from 'path';
 import turbowalk, { IEntry } from 'turbowalk';
 import * as util from 'util';
+import tryGlobMatch from '../../mod_management/util/tryGlobMatch';
 
 function extenderForGame(gameId: string) {
   return {
@@ -123,7 +124,7 @@ export class Context extends DelegateBase {
 
       const filterFunc = isNullOrWhitespace(pattern)
         ? () => true
-        : (input: IEntry) => minimatch(path.basename(input.filePath), pattern);
+        : (input: IEntry) => tryGlobMatch({ pattern, expression: path.basename(input.filePath) });
 
       this.readDir(fullPath, recursive, filterFunc)
         .then((fileList) => callback(null, fileList))
